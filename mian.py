@@ -41,7 +41,6 @@ while running:
     #display.blit(screen.Paint(),(0,0))
     pygame.display.flip()
     clock.tick(40)
-    
-                
+                    
                 
 pygame.quit()    
