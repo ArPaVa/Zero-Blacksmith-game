@@ -13,9 +13,11 @@ def string_to_list(string:str, size):
             return result
         result.append(string[i:i+size])
         i += size
-        
+
+def intial_code ():
+    return "Forge your best weapon to defeat those functions \n\n Forge (mfun f, double min, double max)\n{\n\n}"
 class Save():
-    forge_level = 1
+    forge_level = 0
     def read_save():
         file = open("save.bin","rb")
         save = pickle.load(file)
@@ -27,7 +29,8 @@ class Save():
         file.close()
         
 class Quest():                                #Quizas el q
-    def __init__(self,npc:str,title:str,description:str,monster_list,reward:int,rank:int):
+    def __init__(self,id:int,npc:str,title:str,description:str,monster_list,reward:int,rank:int,code:str):
+        self.id = id
         self.npc = npc
         self.title = title
         self.description = description
@@ -35,6 +38,7 @@ class Quest():                                #Quizas el q
         self.completed = False
         self.reward = reward
         self.rank = rank
+        self.code = code
    
     def Paint(self):
         """ Paint quest title and the quest info"""
@@ -60,12 +64,17 @@ class Quest():                                #Quizas el q
             text_y += 30
         image.set_colorkey((0,0,0),RLEACCEL)
         return image
-        
+ 
+    def Quest_complete(self): #####IMPORTANTE CAMBIAR ESTO
+        return True     
+  
 class Screen ():    
     name = ""
     #Every screen needs to know how to draw it self
     def Paint(self):
         pass
+    def wait(self):
+        self
 
 class Main_screen (Screen):
     name = "main_screen"
@@ -90,7 +99,9 @@ class Main_screen (Screen):
         if self.forge_level == 0:
             path = "resources\state_1.png"
             view = pygame.image.load(path).convert()
-            return view
+            pygame.display.get_surface().blit(view,(0,0))
+            pygame.display.flip()
+        
         else:
             path = "resources\state_" + str(self.forge_level) + ".png"
             view = pygame.image.load(path).convert()
@@ -98,8 +109,27 @@ class Main_screen (Screen):
             quest_sign = pygame.image.load(quest_sign_path).convert()
             quest_sign.set_colorkey((0,0,0),RLEACCEL)
             view.blit(quest_sign,self.quest_rect)
-            return view
-
+            pygame.display.get_surface().blit(view,(0,0))
+            pygame.display.flip()
+        
+    def wait(self):
+        cont = True
+        while(cont):
+          self.Paint()
+          for event in pygame.event.get():
+               if event.type == KEYDOWN:
+                   if event.key == K_ESCAPE:
+                       return "quit", None
+               if event.type == MOUSEBUTTONDOWN:
+                    if pygame.mouse.get_pressed(3)[0]== True:
+                            butt , cont = self.OnClick(pygame.mouse.get_pos())
+        return butt , None
+    
+    def OnClick(self,mouse_pos:tuple):
+        if self.quest_rect.collidepoint(mouse_pos):
+            return "quest_screen",False
+        return "",True
+                       
 class Quest_screen (Screen):
     name = "quest_screen"
     #init tiene que aceptar en su constructor un logic.Save , del cual va a tomar las misiones pendientes para pintarlas
@@ -112,8 +142,8 @@ class Quest_screen (Screen):
         for q in quests:
             if quests[q].rank == self.forge_level:
                 self.quests.append(quests[q])
-        self.max_index = len(quests)//3
-        if len(quests)%3 != 0:
+        self.max_index = len(self.quests)//3
+        if len(self.quests)%3 != 0:
             self.max_index+=1
         self.index = 1
         self.selected = None
@@ -134,7 +164,7 @@ class Quest_screen (Screen):
                             butt , cont = self.OnClick_quest_list(pygame.mouse.get_pos())
                         else:
                             butt, cont = self.OnClick_detailed(pygame.mouse.get_pos())
-        return butt
+        return butt , self.selected
             
     def pager(self):
         start = 3 * (self.index - 1)
@@ -291,15 +321,19 @@ class Quest_screen (Screen):
             self.selected = None
             return 'back', True
         if self.detailed_forge_rect.collidepoint(mouse_pos):
-            self.selected = None
-            return 'forge', False
+            return 'forge_screen', False
         return '', True
 
 class Forge_screen(Screen):
-    def __init__(self):
-        self.TX = TextEditor(30,30,1100,740,pygame.display.get_surface())
+    name = "forge_screen"
+    def __init__(self, quest:Quest):
+        self.TX = TextEditor(200,0,1160,775,pygame.display.get_surface())
         self.TX.set_line_numbers(True)
         self.main_screen_buttom_rect = None
+        self.reset_buttom_rect = None
+        self.forge_buttom_rect = None
+        self.quest = quest
+        self.first_time = True
   
     def wait(self):
         running = True
@@ -315,35 +349,75 @@ class Forge_screen(Screen):
                         butt , running = self.OnClick(pygame.mouse.get_pos())                   
             # display editor functionality once per loop 
             self.Paint(pygame_events, pressed_keys, mouse_x, mouse_y, mouse_pressed) 
-        return butt
+        return butt , self.quest
         
     def Paint(self,pygame_events, pressed_keys, mouse_x, mouse_y, mouse_pressed):
         font = pygame.font.SysFont("Arial",26)
-        main_screen_buttom_path = "resources/buttom.png"
-        main_buttom_image = pygame.image.load(main_screen_buttom_path).convert()
-        main_buttom_image.set_colorkey((0,0,0),RLEACCEL)
-        self.main_screen_buttom_rect = main_buttom_image.get_rect()
-        self.main_screen_buttom_rect.centerx = 1250
+        buttom_path = "resources/buttom.png"
+        buttom_image = pygame.image.load(buttom_path).convert()
+        buttom_image.set_colorkey((0,0,0),RLEACCEL)
+        
+        self.main_screen_buttom_rect = buttom_image.get_rect()
+        self.main_screen_buttom_rect.centerx = 100
         self.main_screen_buttom_rect.centery = 100
-        pygame.display.get_surface().blit(main_buttom_image,self.main_screen_buttom_rect)
-        text = font.render("Main Screen",True, (5,5,5),(0,0,0))
+        pygame.display.get_surface().blit(buttom_image,self.main_screen_buttom_rect)
+        text = font.render("Menu principal",True, (5,5,5),(0,0,0))
         text.set_colorkey((0,0,0), RLEACCEL)
         text_rect = text.get_rect()
-        text_rect.centerx = 1250
+        text_rect.centerx = 100
         text_rect.centery = 100
         pygame.display.get_surface().blit(text,text_rect)
-        self.TX.display_editor(pygame_events, pressed_keys, mouse_x, mouse_y, mouse_pressed) 
+        
+        self.reset_buttom_rect = buttom_image.get_rect()
+        self.reset_buttom_rect.centerx = 100
+        self.reset_buttom_rect.centery = 200
+        pygame.display.get_surface().blit(buttom_image,self.reset_buttom_rect)
+        text = font.render("Reiniciar",True, (5,5,5),(0,0,0))
+        text.set_colorkey((0,0,0), RLEACCEL)
+        text_rect = text.get_rect()
+        text_rect.centerx = 100
+        text_rect.centery = 200
+        pygame.display.get_surface().blit(text,text_rect)
+        
+        self.forge_buttom_rect = buttom_image.get_rect()
+        self.forge_buttom_rect.centerx = 100
+        self.forge_buttom_rect.centery = 300
+        pygame.display.get_surface().blit(buttom_image,self.forge_buttom_rect)
+        text = font.render("Forjar!!",True, (5,5,5),(0,0,0))
+        text.set_colorkey((0,0,0), RLEACCEL)
+        text_rect = text.get_rect()
+        text_rect.centerx = 100
+        text_rect.centery = 300
+        pygame.display.get_surface().blit(text,text_rect)
+        
+        self.TX.display_editor(pygame_events, pressed_keys, mouse_x, mouse_y, mouse_pressed)
+        if self.first_time:
+            self.TX.set_text_from_string(self.quest.code)
+            self.first_time= False
         # update pygame window 
         pygame.display.flip()
 
     def OnClick(self,mouse_pos):
         if self.main_screen_buttom_rect != None and self.main_screen_buttom_rect.collidepoint(mouse_pos):
+            self.quest.code = self.TX.get_text_as_string()
+            rfile = open("quests.bin","rb")
+            save:dict = pickle.load(rfile)
+            rfile.close()
+            save[self.quest.id] = self.quest
+            wfile = open("quests.bin","wb")
+            pickle.dump(save,wfile)
+            wfile.close()
+            
             return "main_screen" , False
+        elif self.forge_buttom_rect != None and self.forge_buttom_rect.collidepoint(mouse_pos):
+            self.quest.code = self.TX.get_text_as_string()
+            return "forge",False
+        elif self.reset_buttom_rect != None and self.reset_buttom_rect.collidepoint(mouse_pos):
+            self.TX.set_text_from_string(intial_code())
         return "", True
         
 class Tutorial():
     def __init__(self,display:pygame.Surface):
-        self.ended = False
         self.display = display
         self.font = pygame.font.SysFont("Arial",26)
         self.step_1()
@@ -419,7 +493,7 @@ class Tutorial():
         # background_path = "resources\state_1.png"
         # background = pygame.image.load(background_path).convert()
         background = Main_screen(0)
-        self.display.blit(background.Paint(),(0,0))
+        background.Paint()
         katrine_msg_path = "resources\Characters\katrine_msg.png"
         katrine_msg_view = pygame.image.load(katrine_msg_path).convert()
         katrine_msg_view.set_colorkey((0,0,0),RLEACCEL)
@@ -451,7 +525,7 @@ class Tutorial():
                         cont = False
         self.step_4(background,katrine_msg_view)
     def step_4(self,background,katrine_msg_view):
-        self.display.blit(background.Paint(),(0,0))
+        background.Paint()
         self.display.blit(katrine_msg_view,(0,0))
         image = self.font.render("Katrine:Te gustaría que te explique las reglas del jue..digo, negocio?",True, (5,5,5),(0,0,0))
         image.set_colorkey((0,0,0),RLEACCEL)
@@ -485,8 +559,9 @@ class Tutorial():
                             self.step_5(background,katrine_msg_view)
                         if no_rect.collidepoint(pygame.mouse.get_pos()):
                             cont=False
+                            self.step_11()
     def step_5(self,background,katrine_msg_view):
-        self.display.blit(background.Paint(),(0,0))
+        background.Paint()
         self.display.blit(katrine_msg_view,(0,0))
         image = self.font.render("Katrine: Vamos a ver que puedes hacer. Forjame algo capaz",True, (5,5,5),(0,0,0))
         image.set_colorkey((0,0,0),RLEACCEL)
@@ -515,7 +590,7 @@ class Tutorial():
         self.step_6()
     def step_6(self):
         background = Main_screen(1)
-        self.display.blit(background.Paint(),(0,0))
+        background.Paint()
         msg_path = "resources\msg.png"
         msg_view = pygame.image.load(msg_path).convert()
         msg_view.set_colorkey((0,0,0),RLEACCEL)
@@ -543,18 +618,98 @@ class Tutorial():
                              self.step_7()
     def step_7(self): ##FUNCIONAMIENTO DEL QUEST BOARD
         background = Main_screen(1)
-        self.display.blit(background.Paint(),(0,0))
+        background.Paint()
         screen = Quest_screen(0)
-        butt = screen.wait()
+        butt,quest = screen.wait()
         if butt == "main_screen":
             self.step_6()
-        self.step_8()
-    def step_8(self):
-        forge = Forge_screen() 
-        butt = forge.wait()
+        else:
+            self.step_8(quest)
+    def step_8(self, quest):
+        forge = Forge_screen(quest) 
+        butt , quest= forge.wait()
         if butt == "main_screen":
             pygame.display.get_surface().fill((0,0,0))
             self.step_6()
+        if butt == "forge":
+            self.step_9(quest)
+    def step_9(self,quest:Quest):
+        checker = quest.Quest_complete()
+        if checker:
+            self.step_10()
+        else:
+            background = Main_screen(0)
+            self.display.blit(background.Paint(),(0,0))
+            katrine_msg_path = "resources\Characters\katrine_msg.png"
+            katrine_msg_view = pygame.image.load(katrine_msg_path).convert()
+            katrine_msg_view.set_colorkey((0,0,0),RLEACCEL)
+            self.display.blit(katrine_msg_view,(0,0))
+            
+            image = self.font.render("Katrine: Es una pena pero no lo haz conseguido, vuelve a intentarlo",True, (5,5,5),(0,0,0))
+            image.set_colorkey((0,0,0),RLEACCEL)
+            text_rect = image.get_rect()
+            text_rect.centerx = 630
+            text_rect.centery = 630
+            self.display.blit(image,text_rect)
+            pygame.display.flip()
+            time.sleep(1)
+            self.step_6()         
+    def step_10(self):
+        pygame.display.get_surface().fill((0,0,0))
+        background = Main_screen(0)
+        background.Paint()
+        katrine_msg_path = "resources\Characters\katrine_msg.png"
+        katrine_msg_view = pygame.image.load(katrine_msg_path).convert()
+        katrine_msg_view.set_colorkey((0,0,0),RLEACCEL)
+        self.display.blit(katrine_msg_view,(0,0))
+        
+        image = self.font.render("Katrine: Un excelente trabajo! Ya estas listo para seguir por ti mismo",True, (5,5,5),(0,0,0))
+        image.set_colorkey((0,0,0),RLEACCEL)
+        text_rect = image.get_rect()
+        text_rect.centerx = 630
+        text_rect.centery = 630
+        self.display.blit(image,text_rect)
+        pygame.display.flip()
+        cont = True
+        while(cont):
+          for event in pygame.event.get():
+               if event.type == MOUSEBUTTONDOWN:
+                    if pygame.mouse.get_pressed(3)[0]== True:
+                        cont = False
+        return True        
+    def step_11(self):
+        pygame.display.get_surface().fill((0,0,0))
+        background = Main_screen(0)
+        background.Paint()
+        katrine_msg_path = "resources\Characters\katrine_msg.png"
+        katrine_msg_view = pygame.image.load(katrine_msg_path).convert()
+        katrine_msg_view.set_colorkey((0,0,0),RLEACCEL)
+        self.display.blit(katrine_msg_view,(0,0))
+        
+        image = self.font.render("Katrine: Ja , Ja el impetu de la juventud ...",True, (5,5,5),(0,0,0))
+        image.set_colorkey((0,0,0),RLEACCEL)
+        text_rect = image.get_rect()
+        text_rect.centerx = 630
+        text_rect.centery = 630
+        self.display.blit(image,text_rect)
+        pygame.display.flip()
+        time.sleep(1)
+        image = self.font.render("Bueno,saldre de tu camino. Buena suerte joven",True, (5,5,5),(0,0,0))
+        image.set_colorkey((0,0,0),RLEACCEL)
+        text_rect = image.get_rect()
+        text_rect.centerx = 630
+        text_rect.centery = 650
+        self.display.blit(image,text_rect)
+        pygame.display.flip()
+        cont = True
+        while(cont):
+          for event in pygame.event.get():
+               if event.type == MOUSEBUTTONDOWN:
+                    if pygame.mouse.get_pressed(3)[0]== True:
+                        cont = False
+        return True        
+        
+    
            
                                 
         
