@@ -1,0 +1,30 @@
+// Forge your best weapon to defeat those functions
+
+fun Secant1(f, x0 , x1, repetitions, tolerance)
+{   
+    var f0 = f(x0);
+    var f1 = f(x1);
+    var i = 0 ;
+    var x ;
+    while(i < repetitions){
+        if ((f1 - f0) < 0.00000000000001) {
+            return x1;
+        }
+        x = x1 - f1 * ((x1 - x0) / (f1 - f0)) ;
+        var fx = f(x);
+        if (abs(fx) < tolerance || abs(x1-x) < tolerance) 
+        {
+            return x ;
+        }
+        i = i + 1 ;
+        x0 = x1 ;
+        x1 = x ;
+        f0 = f(x0);
+        f1 = f(x1);
+    }
+    return x1 ;
+}
+Forge (f, min, max)
+{
+    return Secant1(f, min, max, 30, 0.000001);
+}

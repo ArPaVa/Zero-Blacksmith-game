@@ -1,0 +1,60 @@
+fun Brents(f, x0, x1, repetitions, tolerance)
+{ 
+    var fx0 = f(x0) ;
+    var fx1 = f(x1) ;
+    var x ;
+    var x2 = x0 ;
+    var fx2 = fx0 ;
+ 
+    var mflag = true ;
+    var i = 0 ;
+    var d = 0;
+ 
+    while( i < repetitions ){
+        var new;
+        if (fx0 != fx2 && fx1 != fx2){
+            var L0 = (x0 * fx1 * fx2) / ((fx0 - fx1) * (fx0 - fx2));
+            var L1 = (x1 * fx0 * fx2) / ((fx1 - fx0) * (fx1 - fx2));
+            var L2 = (x2 * fx1 * fx0) / ((fx2 - fx0) * (fx2 - fx1));
+            new = L0 + L1 + L2;
+        }
+        else{
+            new = x1 - ( (fx1 * (x1 - x0)) / (fx1 - fx0) ) ;
+        }
+ 
+        if( ((new < ((3 * x0 + x1) / 4) || new > x1) ||
+            (mflag == true && (abs(new - x1)) >= (abs(x1 - x2) / 2)) ||
+            (mflag == false && (abs(new - x1)) >= (abs(x2 - d) / 2)) ||
+            (mflag == true && (abs(x1 - x2)) < tolerance) ||
+            (mflag == false && (abs(x2 - d)) < tolerance)))
+        {
+            new = (x0 + x1) / 2 ; 
+            mflag = true; 
+        }
+        else{
+            mflag = false ;
+        }
+        var fnew = f(new) ;
+        d = x2;
+        x2 = x1;
+ 
+        if((fx0 * fnew) < 0) {
+            x1 = new ;
+        }
+        else{ x0 = new ; }
+ 
+        i = i + 1 ;
+        
+        fx0 = f(x0) ;
+        fx1 = f(x1) ;
+        fx2 = f(x2) ;
+    }
+    return x1 ;
+}
+Forge (f, min, max)
+{
+    if (f(min) * f(max) < 0){
+        return Brents(f, min, max, 40, 0.00001);
+    }
+    return 0;
+}

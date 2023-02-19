@@ -1,0 +1,35 @@
+// Forge your best weapon to defeat those functions
+
+fun Newton1(f, x0, repetitions, tolerance)
+{   
+    var f0 = f(x0);
+    var i = 0 ;
+    var x ;
+    while(i < repetitions){
+        var df0 = derivative(f, x0) ;
+        if (df0 < 0.00000000000001) {
+            // carefull with dividing on 0
+            return x0;
+        }
+        x = x0 -  ( f0 / df0) ;
+        var fx = f(x);
+        if (abs(fx) < tolerance || abs(x - x0) < tolerance) 
+        {
+            return x ;
+        }
+        i = i + 1 ;
+        x0 = x ;
+        f0 = f(x0);
+    }
+    return x0 ;
+}
+Forge (f, min, max)
+{
+    var firstX = Newton1(f, min, 30, 0.00001) ;
+    var fx = f(firstX) ;
+    if (abs(fx) < 0.00001) 
+    {
+        return firstX ;
+    }
+    return Newton1(f, max, 30, 0.00001);
+}

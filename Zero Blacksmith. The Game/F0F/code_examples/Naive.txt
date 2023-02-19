@@ -1,0 +1,18 @@
+// Forge your best weapon to defeat those functions
+
+fun Naive(f, min, max, interval, tolerance)
+{   
+    var x = min;
+    while ( abs(x-max) >= tolerance)
+    {
+        if (abs(f(x)) < tolerance){
+            return x;
+        }
+        x = x + interval ;
+    } 
+    return x;
+}
+Forge (f, min, max)
+{
+    return Naive(f, min, max, 0.0001, 0.000001);
+}

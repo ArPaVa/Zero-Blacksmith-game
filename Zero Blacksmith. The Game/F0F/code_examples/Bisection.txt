@@ -1,0 +1,34 @@
+// Forge your best weapon to defeat those functions
+
+fun Bisection1(f, a , b, repetitions, tolerance)
+{   
+    var fa = f(a);
+    var fb = f(b);
+    if (fa * fb < 0){
+        var i = 0 ;
+        while(i < repetitions){
+            var c = (a + b) / 2 ; // c = a + (b - a) / 2 ;
+            var fc = f(c);
+            if (abs(fc) < tolerance || abs(a-b) < tolerance) 
+            {
+                return c ;
+            }
+            if (fa * fc < 0){
+                b = c;
+            }
+            else{ a = c;}
+            i = i + 1 ;
+            var fa = f(a);
+            var fb = f(b);
+        }
+        return (a + b) / 2 ;
+    }
+    return 0;
+}
+Forge (f, min, max)
+{
+    if (f(min) * f(max) < 0){
+        return Bisection1(f, min, max, 40, 0.000001);
+    }
+    return 0;
+}

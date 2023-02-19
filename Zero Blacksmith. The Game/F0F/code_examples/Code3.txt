@@ -1,0 +1,29 @@
+// Forge your best weapon to defeat those functions
+
+fun test(a,b)
+{
+    if (a < 0) {
+        a = a ^ 2 ;
+    }
+    if (b < 0) {
+        b = b ^ 2 ;
+    } 
+    return (a - b) % 2 ;
+}
+var even = "a - b is even";
+var odd = "a - b is odd";
+
+Forge (f, min, max)
+{
+    var bin = test(-2,2);
+    if (bin == 69 ) {
+        return "LOL" ;
+    }
+    bin = test(7,6);
+
+    bin = test(11,-13);
+
+    bin = test(0,1);
+
+    return bin ; 
+}

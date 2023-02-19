@@ -1,0 +1,8 @@
+// Welcome to our DSL Forge Zero Finders!
+// The language details are in https://github.com/NileyGF/F0F.git
+
+
+Forge ( f, min, max)
+{
+
+}
