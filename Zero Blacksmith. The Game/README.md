@@ -16,6 +16,7 @@ In the terminal, get to the path: Zero Blacksmith. The Game/Zero Blacksmith
     to begin a new game.
 
 To continue your last game just run:
+
     python3 -m ZB_main 
     or: py -m ZB_main 
 
